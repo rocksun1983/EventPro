@@ -1,0 +1,123 @@
+# ==================== Dependencies ====================
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==================== Environment Variables ====================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# ==================== Logs ====================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# ==================== Runtime & Process ====================
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ==================== Cache & Temporary ====================
+.cache/
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.npm
+.eslintcache
+.node_repl_history
+.prettierignore
+.parcel-cache
+tmp/
+temp/
+.next/
+
+# ==================== Testing ====================
+coverage/
+.nyc_output/
+*.lcov
+.jest-cache/
+.mocha-cache/
+
+# ==================== Build & Distribution ====================
+dist/
+build/
+.out/
+public/
+
+# ==================== TypeScript ====================
+*.tsbuildinfo
+tsconfig.json.bak
+
+# ==================== IDE & Editor ====================
+.vscode/
+!.vscode/extensions.json
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ==================== OS Specific ====================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.folder
+._*
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+
+# ==================== IDE Specific ====================
+*.sublime-project
+*.iml
+*.iws
+*.ipr
+.vscode-test
+.history/
+.vscode-tci
+*.code-workspace
+
+# ==================== Backup & Temporary Files ====================
+*.bak
+*.swp
+*.swo
+*~
+*.tmp
+*.temp
+
+# ==================== Database ====================
+*.db
+*.sqlite
+*.sqlite3
+*.dat
+.mongodb/
+
+# ==================== Node/NPM ====================
+.npm-gyp/
+.npm-cache/
+npm-shrinkwrap.json
+
+# ==================== Misc ====================
+.DS_Store
+.env.*.local
+config.local.js
+.git-credentials

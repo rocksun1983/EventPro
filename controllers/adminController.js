@@ -1,6 +1,6 @@
-import User from "../models/User.js";
-import Event from "../models/Event.js";
-import Vendor from "../models/Vendor.js";
+import User from "../models/user.js";
+import Event from "../models/event.js";
+import Vendor from "../models/vendor.js";
 
 export const dashboardStats = async (req, res) => {
 

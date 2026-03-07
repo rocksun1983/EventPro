@@ -4,12 +4,30 @@ import crypto from "crypto";
 import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
 
+const generateVerificationToken = () => crypto.randomBytes(32).toString("hex");
+
+const sendVerificationEmail = async (email, token) => {
+  const verifyUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/verify-email?token=${token}`;
+  await sendEmail(
+    email,
+    "Verify Your Email - EventPro",
+    `
+    Welcome to EventPro!
+
+    Please verify your email by clicking the link below:
+    ${verifyUrl}
+
+    This link will expire in 24 hours.
+    `
+  );
+};
+
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password are required" });
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ message: "First name, last name, email, and password are required" });
     }
 
     if (password.length < 8) {
@@ -22,20 +40,30 @@ export const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = generateVerificationToken();
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = await User.create({
-      name: name.trim(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       email: email.toLowerCase().trim(),
-      password: hashedPassword
+      password: hashedPassword,
+      isVerified: false,
+      verificationToken,
+      verificationTokenExpiry
     });
+
+    await sendVerificationEmail(user.email, verificationToken);
 
     res.status(201).json({
       message: "User registered",
       token: generateToken(user._id),
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
+        isVerified: user.isVerified,
         role: user.role
       }
     });
@@ -69,7 +97,8 @@ export const loginUser = async (req, res) => {
       token: generateToken(user._id),
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         phone: user.phone,
         smsEnabled: user.smsEnabled,
@@ -240,5 +269,66 @@ export const getProfile = async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Error fetching profile", error: error.message });
+  }
+};
+
+export const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    // Avoid email enumeration
+    if (!user) {
+      return res.json({ message: "If the account exists, a verification email has been sent" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    const verificationToken = generateVerificationToken();
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    await sendVerificationEmail(user.email, verificationToken);
+
+    return res.json({ message: "Verification email sent" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error sending verification email", error: error.message });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Verification token is required" });
+    }
+
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired verification token" });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
+    await user.save();
+
+    return res.json({ message: "Email verified successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error verifying email", error: error.message });
   }
 };

@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  name: {
+  firstName: {
+    type: String,
+    required: [true, "Name is required"],
+    trim: true
+  },
+  lastName: {
     type: String,
     required: [true, "Name is required"],
     trim: true
@@ -28,6 +33,8 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  verificationToken: String,
+  verificationTokenExpiry: Date,
   resetToken: String,
   resetTokenExpiry: Date,
   smsEnabled: {

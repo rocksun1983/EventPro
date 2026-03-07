@@ -1,4 +1,4 @@
-import Ticket from "../models/Ticket.js";
+import Ticket from "../models/ticket.js";
 
 export const getAttendanceStats = async (req, res) => {
 
@@ -8,7 +8,9 @@ export const getAttendanceStats = async (req, res) => {
 
  const remainingGuests = totalGuests - checkedInGuests;
 
- const attendanceRate = ((checkedInGuests / totalGuests) * 100).toFixed(2);
+ const attendanceRate = totalGuests > 0
+  ? ((checkedInGuests / totalGuests) * 100).toFixed(2)
+  : "0.00";
 
  res.json({
   totalGuests,

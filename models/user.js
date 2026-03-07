@@ -1,28 +1,41 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-
-  name: String,
-
+  name: {
+    type: String,
+    required: [true, "Name is required"],
+    trim: true
+  },
   email: {
     type: String,
-    unique: true
+    required: [true, "Email is required"],
+    unique: true,
+    trim: true,
+    lowercase: true
   },
-
-  password: String,
-
+  password: {
+    type: String,
+    required: [true, "Password is required"],
+    select: false
+  },
+  phone: String, // For SMS notifications
   role: {
     type: String,
+    enum: ["user", "organizer", "admin"],
     default: "user"
   },
-
   isVerified: {
     type: Boolean,
     default: false
   },
-
-  resetToken: String
-
+  resetToken: String,
+  resetTokenExpiry: Date,
+  smsEnabled: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true
 });
 
 export default mongoose.model("User", userSchema);

@@ -53,11 +53,20 @@ export const registerUser = async (req, res) => {
       verificationTokenExpiry
     });
 
-    await sendVerificationEmail(user.email, verificationToken);
+    let verificationEmailSent = true;
+    try {
+      await sendVerificationEmail(user.email, verificationToken);
+    } catch (emailError) {
+      verificationEmailSent = false;
+      console.error(`Verification email failed for user ${user._id}:`, emailError.message);
+    }
 
     res.status(201).json({
-      message: "User registered",
+      message: verificationEmailSent
+        ? "User registered"
+        : "User registered, but verification email could not be sent. Please use resend verification.",
       token: generateToken(user._id),
+      verificationEmailSent,
       user: {
         id: user._id,
         firstName: user.firstName,

@@ -77,8 +77,10 @@ The server will start on `http://localhost:5000`
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/register` | Register new user | No |
+| POST | `/signup` | Register new user | No |
 | POST | `/login` | User login | No |
+| POST | `/resend-verification` | Resend email verification link | No |
+| POST | `/verify-email` | Verify email with token | No |
 | POST | `/forgot-password` | Request password reset email | No |
 | POST | `/reset-password/:token` | Reset password with token | No |
 | POST | `/reset-password` | Reset password (authenticated) | Yes |
@@ -150,15 +152,20 @@ Authorization: Bearer <your-jwt-token>
 ### User
 ```javascript
 {
-  name: String,
+  firstName: String,
+  lastName: String,
   email: String (unique),
   password: String (hashed),
   phone: String,
   role: String (default: "user"),
   isVerified: Boolean (default: false),
+  verificationToken: String,
+  verificationTokenExpiry: Date,
   resetToken: String,
   resetTokenExpiry: Date,
-  smsEnabled: Boolean (default: false)
+  smsEnabled: Boolean (default: false),
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
@@ -181,9 +188,10 @@ Authorization: Bearer <your-jwt-token>
 ```javascript
 {
   name: String,
-  service: String,
-  contact: String,
-  email: String
+  serviceType: String,
+  phone: String,
+  email: String,
+  assignedEvent: ObjectId (ref: Event)
 }
 ```
 
@@ -286,7 +294,7 @@ PUT /api/admin/organizers/:organizerId/reset-password
 - **Password Management**: Reset passwords for locked-out organizers
 - **Activity Monitoring**: Track event creation and management activity
 - **Bulk Operations**: Efficient handling of multiple organizer accounts
-## � Event Management
+## 📅 Event Management
 
 Organizers can create, manage, and track their events through a comprehensive event management system.
 
@@ -334,7 +342,7 @@ Authorization: Bearer <your-jwt-token>
 - **Update Events**: `PUT /api/events/:id` (organizer or admin)
 - **Delete Events**: `DELETE /api/events/:id` (organizer or admin)
 
-## �🔑 Password Reset
+## 🔑 Password Reset
 
 EventPro provides secure password reset functionality via email. Users can reset their passwords even when locked out of their accounts.
 
@@ -393,6 +401,7 @@ EventPro/
 ├── utils/
 │   ├── generateToken.js     # JWT token generation
 │   ├── sendEmail.js         # Email service
+│   ├── sendSMS.js           # SMS service (Twilio)
 │   └── reminderScheduler.js # Automated reminders
 ├── .env                     # Environment variables
 ├── .gitignore              # Git ignore rules

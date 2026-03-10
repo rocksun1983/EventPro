@@ -11,6 +11,7 @@ import checkinRoutes from "./routes/checkinRoutes.js"; // Attendee check-in inst
 import vendorRoutes from "./routes/vendorRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import checkinRoutes from "./routes/checkinRoutes.js";
 
 import startReminderService from "./utils/reminderScheduler.js";
 
@@ -18,13 +19,10 @@ dotenv.config();
 
 const app = express();
 
-
 connectDB();
-
 
 app.use(cors());
 app.use(express.json());
-
 
 app.use("/api/auth", authRoutes);
 
@@ -36,7 +34,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-
+app.use("/api/checkin", checkinRoutes);
 
 startReminderService();
 

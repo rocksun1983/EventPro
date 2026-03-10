@@ -12,9 +12,7 @@ const HEADER_MAP = {
   "email address": "email",
   "phone": "phone",
   "phone number": "phone",
-  "ticket type": "ticketType",
-  "ticket_type": "ticketType",
-  "status": "status"
+  "phone_number": "phone"
 };
 
 const normalizeHeader = (header) => {
@@ -32,8 +30,7 @@ const normalizeRow = (row) => {
     if (mapped === "lastName") normalized.lastName = value;
     if (mapped === "email") normalized.email = value;
     if (mapped === "phone") normalized.phone = value;
-    if (mapped === "ticketType") normalized.ticketType = value;
-    if (mapped === "status") normalized.status = value;
+    // Only map required attendee fields for import.
   }
 
   return normalized;
@@ -68,9 +65,6 @@ const parseXlsx = (buffer) => {
 const getFileType = (file) => {
   const name = (file.originalname || "").toLowerCase();
   if (name.endsWith(".xlsx") || file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
-    return "xlsx";
-  }
-  if (name.endsWith(".xls") || file.mimetype === "application/vnd.ms-excel") {
     return "xlsx";
   }
   return "csv";

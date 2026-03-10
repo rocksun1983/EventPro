@@ -5,18 +5,16 @@ const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
   const allowed = [
     "text/csv",
-    "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   ];
 
   const name = (file.originalname || "").toLowerCase();
   const Allowed = allowed.includes(file.mimetype)
     || name.endsWith(".csv")
-    || name.endsWith(".xlsx")
-    || name.endsWith(".xls");
+    || name.endsWith(".xlsx");
 
   if (!Allowed) {
-    return cb(new Error("Invalid file type. Upload CSV or Excel (.xlsx/.xls)."));
+    return cb(new Error("Invalid file type. Upload CSV or Excel (.xlsx)."));
   }
 
   return cb(null, true);
@@ -25,7 +23,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 export const attendeeUpload = (req, res, next) => {

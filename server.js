@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 import connectDB from "./config/db.js";
 
@@ -23,6 +25,25 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+
+const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "EventPro API",
+      version: "1.0.0",
+      description: "API documentation for EventPro."
+    },
+    servers: [{ url: "/api" }]
+  },
+  apis: ["./docs/swagger.js"]
+});
+
+app.get("/api/docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/auth", authRoutes);
 

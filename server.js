@@ -7,7 +7,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import attendeeRoutes from "./routes/attendeeRoutes.js"; // Attendee import/template routes (new)
-import checkinRoutes from "./routes/checkinRoutes.js"; // Attendee check-in instructions (new)
+// import checkinRoutes from "./routes/checkinRoutes.js"; // Attendee check-in instructions (new)
 import vendorRoutes from "./routes/vendorRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";

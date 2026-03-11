@@ -1,12 +1,11 @@
 # EventPro 📅
 
-A comprehensive event management system built with Node.js, Express, and MongoDB. Manage events, vendors, users, and send automated reminders.
+A comprehensive event management system built with Node.js, Express, and MongoDB. Manage events, users, and send automated reminders.
 
 ## 🚀 Features
 
 - **User Authentication & Authorization** - JWT-based auth with role-based access control
 - **Event Management** - Create, view, and manage events
-- **Vendor Management** - Manage event vendors and services
 - **Admin Dashboard** - Administrative controls and statistics
 - **Automated Reminders** - Email and SMS notifications for upcoming events
 - **SMS Integration** - Twilio-powered SMS messaging for event notifications
@@ -105,13 +104,6 @@ The server will start on `http://localhost:5000`
 - `limit`: Number of events per page (default: 10)
 - `page`: Page number (default: 1)
 
-### Vendor Routes (`/api/vendors`)
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/` | Get all vendors | No |
-| POST | `/` | Create new vendor | No |
-
 ### Admin Routes (`/api/admin`)
 
 | Method | Endpoint | Description | Auth Required |
@@ -181,17 +173,6 @@ Authorization: Bearer <your-jwt-token>
   status: String (enum: draft, published, cancelled, completed, default: draft),
   reminderSent: Boolean (default: false),
   createdAt: Date
-}
-```
-
-### Vendor
-```javascript
-{
-  name: String,
-  serviceType: String,
-  phone: String,
-  email: String,
-  assignedEvent: ObjectId (ref: Event)
 }
 ```
 
@@ -383,7 +364,6 @@ EventPro/
 ├── controllers/
 │   ├── authController.js     # Authentication logic
 │   ├── eventController.js    # Event management
-│   ├── vendorController.js   # Vendor management
 │   └── adminController.js    # Admin functions
 ├── middleware/
 │   ├── authMiddleware.js     # JWT authentication
@@ -391,11 +371,9 @@ EventPro/
 ├── models/
 │   ├── user.js              # User schema
 │   ├── event.js             # Event schema
-│   └── vendor.js            # Vendor schema
 ├── routes/
 │   ├── authRoutes.js        # Auth endpoints
 │   ├── eventRoutes.js       # Event endpoints
-│   ├── vendorRoutes.js      # Vendor endpoints
 │   ├── adminRoutes.js       # Admin endpoints
 │   └── dashboardRoutes.js   # Dashboard endpoints
 ├── utils/

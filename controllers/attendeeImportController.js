@@ -52,7 +52,7 @@ const processImport = async ({ importId, file, event, user }) => {
 
     if (!rows.length) {
       importJob.status = "failed";
-      importJob.errors = [{ row: 0, field: "file", message: "No rows found in file" }];
+      importJob.importErrors = [{ row: 0, field: "file", message: "No rows found in file" }];
       await importJob.save();
       return;
     }
@@ -151,14 +151,14 @@ const processImport = async ({ importId, file, event, user }) => {
       failed: errors.length,
       duplicates: duplicates.length
     };
-    importJob.errors = errors;
+    importJob.importErrors = errors;
     importJob.duplicates = duplicates;
     importJob.progress.processedRows = totalRows;
     importJob.progress.percent = 100;
     await importJob.save();
   } catch (error) {
     importJob.status = "failed";
-    importJob.errors = [{ row: 0, field: "processing", message: error.message }];
+    importJob.importErrors = [{ row: 0, field: "processing", message: error.message }];
     await importJob.save();
   }
 };
@@ -246,7 +246,7 @@ export const getAttendeeImportResult = async (req, res) => {
       status: importJob.status,
       summary: importJob.summary,
       duplicates: importJob.duplicates,
-      errors: importJob.errors
+      importErrors: importJob.importErrors
     });
   } catch (error) {
     console.error("Get attendee import result error:", error);

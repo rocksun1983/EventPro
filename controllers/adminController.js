@@ -1,6 +1,5 @@
 import User from "../models/user.js";
 import Event from "../models/event.js";
-import Vendor from "../models/vendor.js";
 import bcrypt from "bcryptjs";
 import sendSMS from "../utils/sendSMS.js";
 
@@ -10,12 +9,9 @@ export const dashboardStats = async (req, res) => {
 
   const events = await Event.countDocuments();
 
-  const vendors = await Vendor.countDocuments();
-
   res.json({
     totalUsers: users,
-    totalEvents: events,
-    totalVendors: vendors
+    totalEvents: events
   });
 
 };

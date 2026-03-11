@@ -12,7 +12,6 @@
  *   - name: Events
  *   - name: Attendees
  *   - name: Check-in
- *   - name: Vendors
  *   - name: Admin
  *   - name: Dashboard
  * components:
@@ -104,21 +103,6 @@
  *             $ref: '#/components/schemas/Event'
  *         pagination:
  *           $ref: '#/components/schemas/Pagination'
- *     Vendor:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         name:
- *           type: string
- *         serviceType:
- *           type: string
- *         phone:
- *           type: string
- *         email:
- *           type: string
- *         assignedEvent:
- *           type: string
  *     AttendeeImportProgress:
  *       type: object
  *       properties:
@@ -182,7 +166,7 @@
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/AttendeeImportDuplicate'
- *         errors:
+ *         importErrors:
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/AttendeeImportError'
@@ -1038,36 +1022,6 @@
  *             schema:
  *               $ref: '#/components/schemas/CheckinSendResult'
  *
- * /vendors:
- *   get:
- *     tags: [Vendors]
- *     summary: List vendors
- *     responses:
- *       200:
- *         description: Vendor list
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Vendor'
- *   post:
- *     tags: [Vendors]
- *     summary: Create vendor
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Vendor'
- *     responses:
- *       200:
- *         description: Vendor created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Vendor'
- *
  * /admin/dashboard:
  *   get:
  *     tags: [Admin]
@@ -1364,7 +1318,5 @@
  *                 totalUsers:
  *                   type: integer
  *                 totalEvents:
- *                   type: integer
- *                 totalVendors:
  *                   type: integer
  */

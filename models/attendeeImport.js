@@ -38,7 +38,7 @@ const attendeeImportSchema = new mongoose.Schema({
     duplicates: { type: Number, default: 0 }
   },
 
-  errors: [{
+  importErrors: [{
     row: Number,
     field: String,
     message: String

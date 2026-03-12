@@ -1,15 +1,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
-import attendeeRoutes from "./routes/attendeeRoutes.js"; // Attendee import/template routes
-import attendeeSelfRegistrationRoutes from "./routes/attendeeSelfRegistrationRoutes.js"; // Self-registration routes
-import checkinRoutes from "./routes/checkinRoutes.js"; // Attendee check-in instructions
-import eventSaveRoutes from "./routes/eventSaveRoutes.js"; // Event save routes
+import attendeeRoutes from "./routes/attendeeRoutes.js"; 
+import attendeeSelfRegistrationRoutes from "./routes/attendeeSelfRegistrationRoutes.js"; 
+import checkinRoutes from "./routes/checkinRoutes.js"; 
+import eventSaveRoutes from "./routes/eventSaveRoutes.js"; 
 import vendorRoutes from "./routes/vendorRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
@@ -27,10 +29,30 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// Swagger docs
+const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "EventPro API",
+      version: "1.0.0",
+      description: "API documentation for EventPro."
+    },
+    servers: [{ url: "/api" }]
+  },
+  apis: ["./docs/swagger.js"]
+});
+
+app.get("/api/docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Routes
 app.use("/api/auth", authRoutes);
 
-// Event-related routes (organized)
+// Event-related routes
 app.use("/api/events", eventRoutes); // Event management endpoints
 app.use("/api/events", attendeeRoutes); // Attendee import endpoints
 app.use("/api/events", attendeeSelfRegistrationRoutes); // Attendee self-registration

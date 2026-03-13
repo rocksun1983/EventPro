@@ -12,7 +12,7 @@ import attendeeRoutes from "./routes/attendeeRoutes.js";
 import attendeeSelfRegistrationRoutes from "./routes/attendeeSelfRegistrationRoutes.js"; 
 import checkinRoutes from "./routes/checkinRoutes.js"; 
 import eventSaveRoutes from "./routes/eventSaveRoutes.js"; 
-import vendorRoutes from "./routes/vendorRoutes.js";
+// import vendorRoutes from "./routes/vendorRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 
@@ -60,7 +60,7 @@ app.use("/api/events", eventSaveRoutes); // Event save endpoints
 app.use("/api/events", checkinRoutes); // Check-in instruction endpoints
 
 // Other routes
-app.use("/api/vendors", vendorRoutes);
+// app.use("/api/vendors", vendorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 

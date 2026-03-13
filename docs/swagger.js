@@ -3,7 +3,7 @@
  * openapi: 3.0.0
  * info:
  *   title: EventPro API
- *   version: 1.0.0
+ *   version: 1.1.0
  *   description: API documentation for EventPro.
  * servers:
  *   - url: /api
@@ -60,6 +60,10 @@
  *           enum: [user, organizer, admin]
  *         isVerified:
  *           type: boolean
+ *         savedEvents:
+ *           type: array
+ *           items:
+ *             type: string
  *     AuthResponse:
  *       type: object
  *       properties:
@@ -730,10 +734,10 @@
  *             schema:
  *               $ref: '#/components/schemas/EventListResponse'
  *
- * /events/{eventId}/attendees/imports:
+ * /events/{eventId}/save:
  *   post:
- *     tags: [Attendees]
- *     summary: Upload attendees file for import
+ *     tags: [Events]
+ *     summary: Save an event to user's saved list
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -742,31 +746,101 @@
  *         required: true
  *         schema:
  *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required: [file]
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
  *     responses:
- *       202:
- *         description: Import queued
+ *       200:
+ *         description: Event saved
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 importId:
- *                   type: string
- *                 status:
+ *                 message:
  *                   type: string
  *       400:
- *         description: Invalid request
+ *         description: Event already saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Event not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *   delete:
+ *     tags: [Events]
+ *     summary: Remove an event from user's saved list
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Event removed from saved list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Event not saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *
+ * /events/{eventId}/register:
+ *   post:
+ *     tags: [Attendees]
+ *     summary: Self-register for an event
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Successfully registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 attendee:
+ *                   type: object
+ *                   properties:
+ *                     event:
+ *                       type: string
+ *                     user:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *       400:
+ *         description: Already registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Event not found
  *         content:
  *           application/json:
  *             schema:

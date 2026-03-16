@@ -51,10 +51,13 @@ A comprehensive event management system built with Node.js, Express, and MongoDB
    EMAIL_SERVICE=gmail
    EMAIL_USER=your-email@gmail.com
    EMAIL_PASSWORD=your-app-password
+   BACKEND_URL=http://localhost:5000
+   FRONTEND_URL=http://localhost:3000
+   APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+   APPWRITE_PROJECT_ID=your-appwrite-project-id
    TWILIO_ACCOUNT_SID=your-twilio-account-sid
    TWILIO_AUTH_TOKEN=your-twilio-auth-token
    TWILIO_PHONE_NUMBER=+1234567890
-   FRONTEND_URL=http://localhost:3000
    PORT=5000
    NODE_ENV=development
    ```
@@ -80,9 +83,10 @@ The server will start on `http://localhost:5000`
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
 | POST | `/signup` | Register new user | No |
+| POST | `/signup/user` | Register new user (explicit user role) | No |
+| POST | `/signup/organizer` | Create organizer account | Admin only |
+| POST | `/signup/admin` | Create admin account | No (open endpoint) |
 | POST | `/login` | User login | No |
-| POST | `/resend-verification` | Resend email verification link | No |
-| POST | `/verify-email` | Verify email with token | No |
 | POST | `/forgot-password` | Request password reset email | No |
 | POST | `/reset-password/:token` | Reset password with token | No |
 | POST | `/reset-password` | Reset password (authenticated) | Yes |
@@ -483,3 +487,12 @@ For support, email the repository owner or create an issue in the GitHub reposit
 ---
 
 **Made with ❤️ for event management**
+### Appwrite Auth (`/api/auth`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/login/appwrite` | Log in with Appwrite JWT |
+
+**Appwrite Flow:**
+1. Use Appwrite OAuth on the frontend to get a JWT.
+2. Send `{ "jwt": "<appwrite-jwt>" }` to `/api/auth/login/appwrite`.

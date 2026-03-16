@@ -21,7 +21,6 @@
   },
   "homepage": "https://github.com/rocksun1983/EventPro#readme",
   "dependencies": {
-    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -35,6 +34,7 @@
     "nodemailer": "^8.0.1",
     "pdfkit": "^0.17.1",
     "qrcode": "^1.5.4",
+    "appwrite": "^13.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "twilio": "^5.12.2",

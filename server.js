@@ -53,6 +53,10 @@ app.get("/api/docs.json", (req, res) => {
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
+app.get("/", (req, res) => {
+  res.send("Welcome to the EventPro API");
+});
+
 app.use("/api/auth", authRoutes);
 
 // Event-related routes

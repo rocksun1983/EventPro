@@ -3,26 +3,12 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
+import { Client, Account } from "appwrite";
 
+// Verification flow removed; token helper kept for reset tokens.
 const generateVerificationToken = () => crypto.randomBytes(32).toString("hex");
 
-const sendVerificationEmail = async (email, token) => {
-  const verifyUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/verify-email?token=${token}`;
-  await sendEmail(
-    email,
-    "Verify Your Email - EventPro",
-    `
-    Welcome to EventPro!
-
-    Please verify your email by clicking the link below:
-    ${verifyUrl}
-
-    This link will expire in 24 hours.
-    `
-  );
-};
-
-export const registerUser = async (req, res) => {
+const registerWithRole = async (req, res, role) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
@@ -40,33 +26,18 @@ export const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = generateVerificationToken();
-    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
     const user = await User.create({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      isVerified: false,
-      verificationToken,
-      verificationTokenExpiry
+      isVerified: true,
+      role
     });
 
-    let verificationEmailSent = true;
-    try {
-      await sendVerificationEmail(user.email, verificationToken);
-    } catch (emailError) {
-      verificationEmailSent = false;
-      console.error(`Verification email failed for user ${user._id}:`, emailError.message);
-    }
-
     res.status(201).json({
-      message: verificationEmailSent
-        ? "User registered"
-        : "User registered, but verification email could not be sent. Please use resend verification.",
+      message: "User registered",
       token: generateToken(user._id),
-      verificationEmailSent,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -80,6 +51,27 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: "Error registering user", error: error.message });
   }
 };
+
+const splitName = (fullName) => {
+  if (!fullName) return { firstName: "", lastName: "" };
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+};
+
+const createAppwriteAccountClient = (jwt) => {
+  const endpoint = process.env.APPWRITE_ENDPOINT;
+  const project = process.env.APPWRITE_PROJECT_ID;
+  if (!endpoint || !project) {
+    throw new Error("Appwrite not configured. Set APPWRITE_ENDPOINT and APPWRITE_PROJECT_ID.");
+  }
+  const client = new Client().setEndpoint(endpoint).setProject(project).setJWT(jwt);
+  return new Account(client);
+};
+
+export const registerUser = async (req, res) => registerWithRole(req, res, "user");
+export const registerOrganizer = async (req, res) => registerWithRole(req, res, "organizer");
+export const registerAdmin = async (req, res) => registerWithRole(req, res, "admin");
 
 
 export const loginUser = async (req, res) => {
@@ -281,72 +273,58 @@ export const getProfile = async (req, res) => {
   }
 };
 
-export const resendVerification = async (req, res) => {
+
+export const loginWithAppwrite = async (req, res) => {
   try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+    const { jwt } = req.body;
+    if (!jwt) {
+      return res.status(400).json({ message: "jwt is required" });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail });
+    const account = createAppwriteAccountClient(jwt);
+    const appwriteUser = await account.get();
 
-    // Avoid email enumeration
-    if (!user) {
-      return res.json({ message: "If the account exists, a verification email has been sent" });
+    const email = (appwriteUser.email || "").toLowerCase().trim();
+    const appwriteId = appwriteUser.$id;
+    const name = appwriteUser.name || "";
+    const { firstName, lastName } = splitName(name);
+
+    let user = await User.findOne({ appwriteId });
+    if (!user && email) {
+      user = await User.findOne({ email });
     }
-
-    if (user.isVerified) {
-      return res.status(400).json({ message: "Email is already verified" });
-    }
-
-    const verificationToken = generateVerificationToken();
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await user.save();
-
-    await sendVerificationEmail(user.email, verificationToken);
-
-    return res.json({ message: "Verification email sent" });
-  } catch (error) {
-    return res.status(500).json({ message: "Error sending verification email", error: error.message });
-  }
-};
-
-export const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.query;
-
-    if (!token) {
-      return res.status(400).json({ message: "Verification token is required" });
-    }
-
-    const user = await User.findOne({
-      verificationToken: token,
-      verificationTokenExpiry: { $gt: Date.now() }
-    });
 
     if (!user) {
-      return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:3010"}/verification failed`);
-    }
-
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpiry = undefined;
-    await user.save();
-
-    let redirectUrl;
-    if (user.role === "admin") {
-      redirectUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/admin/dashboard`;
-    } else if (user.role === "organizer") {
-      redirectUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/organizer/dashboard`;
+      const hashedPassword = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10);
+      user = await User.create({
+        firstName: firstName || email.split("@")[0] || "User",
+        lastName: lastName || "",
+        email: email || `${appwriteId}@appwrite.local`,
+        password: hashedPassword,
+        isVerified: true,
+        appwriteId,
+        role: "user"
+      });
     } else {
-      redirectUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/dashboard`;
+      if (!user.appwriteId) user.appwriteId = appwriteId;
+      if (!user.isVerified) user.isVerified = true;
+      await user.save();
     }
-    return res.redirect(redirectUrl);
-    
+
+    return res.json({
+      token: generateToken(user._id),
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        smsEnabled: user.smsEnabled,
+        role: user.role,
+        isVerified: user.isVerified
+      }
+    });
   } catch (error) {
-    return res.status(500).json({ message: "Error verifying email", error: error.message });
+    return res.status(500).json({ message: "Error logging in with Appwrite", error: error.message });
   }
 };

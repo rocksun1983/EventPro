@@ -40,8 +40,10 @@ const userSchema = new mongoose.Schema({
   smsEnabled: {
     type: Boolean,
     default: false
-  }
-}, {
+  },
+  appwriteId: String
+  },
+{
   timestamps: true
 });
 

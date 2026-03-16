@@ -44,3 +44,33 @@ export const optionalAuth = async (req, res, next) => {
 
   next();
 };
+
+// Auth for endpoints that cannot set Authorization headers (e.g., EventSource).
+export const protectQueryToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const queryToken = req.query && req.query.token ? String(req.query.token) : "";
+
+  const bearerToken = authHeader && authHeader.startsWith("Bearer ")
+    ? authHeader.split(" ")[1]
+    : "";
+
+  const token = bearerToken || queryToken;
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized, no token" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized, user not found" });
+    }
+
+    req.user = user;
+    return next();
+  } catch (error) {
+    console.error(error);
+    return res.status(401).json({ message: "Not authorized, token failed" });
+  }
+};

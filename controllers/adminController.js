@@ -1,5 +1,6 @@
 import User from "../models/user.js";
 import Event from "../models/event.js";
+import AttendeeCheckin from "../models/attendeeCheckin.js";
 import bcrypt from "bcryptjs";
 import sendSMS from "../utils/sendSMS.js";
 
@@ -9,9 +10,12 @@ export const dashboardStats = async (req, res) => {
 
   const events = await Event.countDocuments();
 
+  const checkins = await AttendeeCheckin.countDocuments();
+
   res.json({
     totalUsers: users,
-    totalEvents: events
+    totalEvents: events,
+    totalCheckins: checkins
   });
 
 };

@@ -3,6 +3,7 @@ import {
   createEvent,
   getEvents,
   getEventById,
+  duplicateEvent,
   updateEvent,
   deleteEvent,
   getMyEvents,
@@ -23,6 +24,7 @@ router.get("/:id", getEventById);
 // Protected routes (require authentication)
 // --------------------
 router.post("/", protect, createEvent);
+router.post("/:id/duplicate", protect, duplicateEvent);
 router.put("/:id", protect, updateEvent);
 router.delete("/:id", protect, deleteEvent);
 

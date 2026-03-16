@@ -48,6 +48,15 @@ const attendeeCheckinSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Timestamp for the first successful on-site check-in scan
+attendeeCheckinSchema.add({
+  checkedInAt: {
+    type: Date,
+    default: null
+  }
+});
+
 attendeeCheckinSchema.index({ event: 1, attendee: 1 }, { unique: true });
+attendeeCheckinSchema.index({ checkInCode: 1 });
 
 export default mongoose.model("AttendeeCheckin", attendeeCheckinSchema);

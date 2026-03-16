@@ -2,6 +2,7 @@ import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import {
   getCheckinTemplate,
+  scanCheckinCode,
   previewCheckinMessage,
   generateCheckinCodes,
   sendCheckinInstructions,
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.get("/:eventId/checkin/template", protect, getCheckinTemplate);
 
+router.post("/:eventId/checkin/scan", protect, scanCheckinCode);
 
 router.post("/:eventId/checkin/preview", protect, previewCheckinMessage);
 router.post("/:eventId/checkin/generate", protect, generateCheckinCodes);

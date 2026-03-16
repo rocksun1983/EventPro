@@ -11,15 +11,24 @@ export const createEvent = async (req, res) => {
   try {
     const { title, description, date, location, expectedAttendees, status } = req.body;
 
-    if (!title || !date || !location) {
+    const nextStatus = status || "draft";
+
+    if (!title || !location) {
       return res.status(400).json({
-        message: "Missing required fields: title, date, and location are required"
+        message: "Missing required fields: title and location are required"
       });
     }
 
-    const eventDate = new Date(date);
-    if (eventDate <= new Date()) {
-      return res.status(400).json({ message: "Event date must be in the future" });
+    let eventDate;
+    if (date) {
+      eventDate = new Date(date);
+      if (eventDate <= new Date() && nextStatus !== "draft") {
+        return res.status(400).json({ message: "Event date must be in the future" });
+      }
+    } else if (nextStatus !== "draft") {
+      return res.status(400).json({
+        message: "Missing required fields: date is required for non-draft events"
+      });
     }
 
     const eventData = {
@@ -28,7 +37,7 @@ export const createEvent = async (req, res) => {
       date: eventDate,
       location: location.trim(),
       expectedAttendees: expectedAttendees || 0,
-      status: status || "draft",
+      status: nextStatus,
       organizer: req.user._id
     };
 
@@ -93,6 +102,37 @@ export const getEventById = async (req, res) => {
   }
 };
 
+// Duplicate Event (Organizer/Admin)
+export const duplicateEvent = async (req, res) => {
+  try {
+    const sourceEvent = await Event.findById(req.params.id);
+    if (!sourceEvent) return res.status(404).json({ message: "Event not found" });
+
+    if (sourceEvent.organizer.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized to duplicate this event" });
+    }
+
+    const duplicated = await Event.create({
+      title: sourceEvent.title,
+      description: sourceEvent.description,
+      location: sourceEvent.location,
+      expectedAttendees: sourceEvent.expectedAttendees,
+      status: "draft",
+      organizer: sourceEvent.organizer
+    });
+
+    await duplicated.populate("organizer", "name email");
+
+    res.status(201).json({
+      message: "Event duplicated successfully",
+      event: duplicated
+    });
+  } catch (error) {
+    console.error("Duplicate event error:", error);
+    res.status(500).json({ message: "Error duplicating event", error: error.message });
+  }
+};
+
 // Update Event
 export const updateEvent = async (req, res) => {
   try {
@@ -105,19 +145,30 @@ export const updateEvent = async (req, res) => {
 
     const { title, description, date, location, expectedAttendees, status } = req.body;
 
+    const nextStatus = status !== undefined ? status : event.status;
+
     if (date) {
       const eventDate = new Date(date);
-      if (eventDate <= new Date() && status !== "completed") {
+      if (eventDate <= new Date() && nextStatus !== "completed") {
         return res.status(400).json({ message: "Event date must be in the future" });
       }
       event.date = eventDate;
     }
 
+    if (status !== undefined) event.status = status;
+
     if (title !== undefined) event.title = title.trim();
     if (description !== undefined) event.description = description?.trim();
     if (location !== undefined) event.location = location.trim();
     if (expectedAttendees !== undefined) event.expectedAttendees = expectedAttendees;
-    if (status !== undefined) event.status = status;
+
+    if (nextStatus !== "draft" && !event.date) {
+      return res.status(400).json({ message: "Event date is required for non-draft events" });
+    }
+
+    if (status === "draft" && !event.date) {
+      event.date = undefined;
+    }
 
     await event.save();
     await event.populate("organizer", "name email");

@@ -14,6 +14,7 @@
  *   - name: Check-in
  *   - name: Admin
  *   - name: Dashboard
+ *   - name: Organizer
  * components:
  *   securitySchemes:
  *     bearerAuth:
@@ -208,6 +209,31 @@
  *           type: string
  *         checkInNumber:
  *           type: string
+ *     CheckinScanRequest:
+ *       type: object
+ *       required: [code]
+ *       properties:
+ *         code:
+ *           type: string
+ *     CheckinScanResponse:
+ *       type: object
+ *       properties:
+ *         duplicate:
+ *           type: boolean
+ *         checkedInAt:
+ *           type: string
+ *           format: date-time
+ *         attendee:
+ *           type: object
+ *           properties:
+ *             firstName:
+ *               type: string
+ *             lastName:
+ *               type: string
+ *             email:
+ *               type: string
+ *             phone:
+ *               type: string
  *     CheckinSendStatus:
  *       type: object
  *       properties:
@@ -225,6 +251,20 @@
  *               type: integer
  *             percent:
  *               type: integer
+ *     SmsInboundRequest:
+ *       type: object
+ *       properties:
+ *         Body:
+ *           type: string
+ *           description: The inbound SMS body from Twilio
+ *         From:
+ *           type: string
+ *           description: The inbound SMS sender phone number
+ *     SmsInboundResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
  *     CheckinSendResult:
  *       type: object
  *       properties:
@@ -584,7 +624,7 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [title, date, location]
+ *             required: [title, location]
  *             properties:
  *               title:
  *                 type: string
@@ -593,6 +633,7 @@
  *               date:
  *                 type: string
  *                 format: date-time
+ *                 description: Required unless status is draft
  *               location:
  *                 type: string
  *               expectedAttendees:
@@ -630,6 +671,43 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Event'
+ *       404:
+ *         description: Event not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *
+ * /events/{id}/duplicate:
+ *   post:
+ *     tags: [Events]
+ *     summary: Duplicate an event (draft, no date)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Event duplicated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 event:
+ *                   $ref: '#/components/schemas/Event'
+ *       403:
+ *         description: Not authorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Event not found
  *         content:
@@ -949,6 +1027,58 @@
  *             schema:
  *               type: string
  *
+ * /events/{eventId}/attendees/attendance.csv:
+ *   get:
+ *     tags: [Attendees]
+ *     summary: Export attendance CSV report
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: only
+ *         schema:
+ *           type: string
+ *           enum: [no_show]
+ *         description: Filter report rows (e.g., only no-shows)
+ *     responses:
+ *       200:
+ *         description: CSV file
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *
+ * /events/{eventId}/attendees/attendance.pdf:
+ *   get:
+ *     tags: [Attendees]
+ *     summary: Export attendance PDF report
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: only
+ *         schema:
+ *           type: string
+ *           enum: [no_show]
+ *         description: Filter report rows (e.g., only no-shows)
+ *     responses:
+ *       200:
+ *         description: PDF file
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *
  * /events/{eventId}/checkin/template:
  *   get:
  *     tags: [Check-in]
@@ -968,6 +1098,38 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CheckinTemplate'
+ *
+ * /events/{eventId}/checkin/scan:
+ *   post:
+ *     tags: [Check-in]
+ *     summary: Scan a check-in code
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CheckinScanRequest'
+ *     responses:
+ *       200:
+ *         description: Scan result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CheckinScanResponse'
+ *       404:
+ *         description: Check-in code not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *
  * /events/{eventId}/checkin/preview:
  *   post:
@@ -1095,6 +1257,24 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CheckinSendResult'
+ *
+ * /sms/inbound:
+ *   post:
+ *     tags: [Check-in]
+ *     summary: Twilio inbound SMS check-in validation
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             $ref: '#/components/schemas/SmsInboundRequest'
+ *     responses:
+ *       200:
+ *         description: TwiML response
+ *         content:
+ *           text/xml:
+ *             schema:
+ *               type: string
  *
  * /admin/dashboard:
  *   get:
@@ -1393,4 +1573,49 @@
  *                   type: integer
  *                 totalEvents:
  *                   type: integer
+ *                 totalCheckins:
+ *                   type: integer
+ *
+ * /organizer/dashboard/stats:
+ *   get:
+ *     tags: [Organizer]
+ *     summary: Get organizer dashboard stats
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Organizer stats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalEvents:
+ *                   type: integer
+ *                 upcomingEvents:
+ *                   type: integer
+ *                 completedEvents:
+ *                   type: integer
+ *                 totalCheckins:
+ *                   type: integer
+ *
+ * /organizer/dashboard/stream:
+ *   get:
+ *     tags: [Organizer]
+ *     summary: Stream organizer dashboard stats (SSE)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         schema:
+ *           type: string
+ *         description: JWT token (for SSE clients that cannot set Authorization headers)
+ *     responses:
+ *       200:
+ *         description: Server-sent events stream
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
  */

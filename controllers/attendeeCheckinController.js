@@ -35,6 +35,51 @@ export const getCheckinTemplate = async (req, res) => {
   return res.json({ template: DEFAULT_TEMPLATE });
 };
 
+export const scanCheckinCode = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { code } = req.body;
+
+    if (!code || typeof code !== "string") {
+      return res.status(400).json({ message: "code is required" });
+    }
+
+    const event = await Event.findById(eventId);
+    const access = ensureEventAccess(event, req.user);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const checkin = await AttendeeCheckin.findOne({
+      event: event._id,
+      checkInCode: code.trim()
+    }).populate("attendee", "firstName lastName email phone");
+
+    if (!checkin) {
+      return res.status(404).json({ message: "Check-in code not found for this event" });
+    }
+
+    const now = new Date();
+    const isDuplicate = !!checkin.checkedInAt;
+    if (!isDuplicate) {
+      checkin.checkedInAt = now;
+      await checkin.save();
+      if (checkin.attendee?._id) {
+        await Attendee.findByIdAndUpdate(checkin.attendee._id, { status: "checked_in" });
+      }
+    }
+
+    return res.json({
+      duplicate: isDuplicate,
+      checkedInAt: checkin.checkedInAt || now,
+      attendee: checkin.attendee
+    });
+  } catch (error) {
+    console.error("Scan check-in code error:", error);
+    return res.status(500).json({ message: "Error scanning check-in code", error: error.message });
+  }
+};
+
 export const previewCheckinMessage = async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -115,7 +160,18 @@ export const generateCheckinCodes = async (req, res) => {
         continue;
       }
 
-      const code = generateCode();
+      let code = "";
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const candidate = generateCode();
+        const exists = await AttendeeCheckin.exists({ checkInCode: candidate });
+        if (!exists) {
+          code = candidate;
+          break;
+        }
+      }
+      if (!code) {
+        return res.status(500).json({ message: "Unable to generate unique check-in codes. Please retry." });
+      }
       const qrCodeUrl = baseUrl ? `${baseUrl.replace(/\/$/, "")}/checkin/${attendee._id}` : "";
 
       await AttendeeCheckin.create({

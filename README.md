@@ -5,10 +5,12 @@ A comprehensive event management system built with Node.js, Express, and MongoDB
 ## 🚀 Features
 
 - **User Authentication & Authorization** - JWT-based auth with role-based access control
-- **Event Management** - Create, view, and manage events
+- **Event Management** - Create, view, manage, and duplicate events
 - **Admin Dashboard** - Administrative controls and statistics
 - **Automated Reminders** - Email and SMS notifications for upcoming events
 - **SMS Integration** - Twilio-powered SMS messaging for event notifications
+- **Attendance Reporting** - CSV and PDF attendance exports with no-show visibility
+- **Organizer Dashboard** - Live stats with auto-refresh (SSE)
 - **RESTful API** - Well-structured API endpoints
 
 ## 🛠️ Tech Stack
@@ -18,6 +20,7 @@ A comprehensive event management system built with Node.js, Express, and MongoDB
 - **Authentication**: JWT (JSON Web Tokens)
 - **Email**: Nodemailer for automated reminders
 - **SMS**: Twilio for SMS messaging
+- **PDF**: PDFKit for shareable summary reports
 - **Security**: bcryptjs for password hashing
 - **Development**: Nodemon for hot reloading
 
@@ -93,6 +96,7 @@ The server will start on `http://localhost:5000`
 | GET | `/` | Get all events (with filters) | No |
 | GET | `/:id` | Get event by ID | No |
 | POST | `/` | Create new event | Yes |
+| POST | `/:id/duplicate` | Duplicate an event (draft, no date) | Yes |
 | PUT | `/:id` | Update event | Yes |
 | DELETE | `/:id` | Delete event | Yes |
 | GET | `/organizer/my-events` | Get organizer's events | Yes |
@@ -132,6 +136,49 @@ The server will start on `http://localhost:5000`
 |--------|----------|-------------|---------------|
 | GET | `/stats` | Get dashboard statistics | Admin only |
 
+### Organizer Dashboard Routes (`/api/organizer/dashboard`)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/stats` | Get organizer dashboard stats | Organizer only |
+| GET | `/stream` | Live organizer stats stream (SSE) | Organizer only |
+
+**SSE Auth Note:**
+- If your frontend cannot set `Authorization` headers for SSE, pass a JWT as `?token=...` to `/stream`.
+
+### Attendee Routes (`/api/events`)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/:eventId/attendees/imports` | Import attendees (CSV/XLSX) | Organizer/Admin |
+| GET | `/:eventId/attendees/imports/:importId` | Get import status | Organizer/Admin |
+| GET | `/:eventId/attendees/imports/:importId/result` | Get import result | Organizer/Admin |
+| GET | `/:eventId/attendees/imports/:importId/duplicates.csv` | Download duplicate report | Organizer/Admin |
+| GET | `/:eventId/attendees/imports/template` | Download attendee import template | Organizer/Admin |
+| GET | `/:eventId/attendees/attendance.csv` | Export attendance CSV report | Organizer/Admin |
+| GET | `/:eventId/attendees/attendance.pdf` | Export attendance PDF report | Organizer/Admin |
+
+**Query Parameters for attendance exports:**
+- `only`: Filter report rows (use `no_show` for no-shows only)
+
+### Check-in Routes (`/api/events`)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/:eventId/checkin/template` | Get default check-in message template | Organizer/Admin |
+| POST | `/:eventId/checkin/preview` | Preview check-in message | Organizer/Admin |
+| POST | `/:eventId/checkin/generate` | Generate check-in codes | Organizer/Admin |
+| POST | `/:eventId/checkin/scan` | Scan a check-in code (duplicate-aware) | Organizer/Admin |
+| POST | `/:eventId/checkin/send` | Send check-in instructions | Organizer/Admin |
+| GET | `/:eventId/checkin/send/:sendId` | Get check-in send status | Organizer/Admin |
+| GET | `/:eventId/checkin/send/:sendId/result` | Get check-in send result | Organizer/Admin |
+
+### SMS Webhook Routes (`/api/sms`)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/inbound` | Twilio inbound SMS check-in validation | No (Twilio webhook) |
+
 ## 🔐 Authentication
 
 Include the JWT token in the Authorization header:
@@ -166,7 +213,7 @@ Authorization: Bearer <your-jwt-token>
 {
   title: String (required),
   description: String,
-  date: Date (required, must be future date),
+  date: Date (required unless status is draft, must be future date for non-draft),
   location: String (required, venue/location),
   expectedAttendees: Number (default: 0),
   organizer: ObjectId (ref: User, required),
@@ -212,6 +259,7 @@ EventPro supports SMS notifications through Twilio integration. Users can opt-in
 - **Admin Testing**: Test SMS configuration without creating events
 - **User Opt-in**: Users control their SMS preferences
 - **Fallback Support**: Continues working even if SMS is not configured
+- **Feature Phone Check-in**: Attendees can text a 6-digit code to check in and receive confirmation
 ## 👥 Organizer Management
 
 Admins have comprehensive tools to manage all registered organizer accounts on the platform.
@@ -285,8 +333,11 @@ Organizers can create, manage, and track their events through a comprehensive ev
 
 **Required Fields:**
 - `title`: Event title
-- `date`: Event date (must be in the future)
 - `location`: Venue/location
+
+**Date Rules:**
+- `date` is required for non-draft events
+- Draft events may omit `date` (useful for duplication and planning)
 
 **Optional Fields:**
 - `description`: Event description
@@ -322,6 +373,7 @@ Authorization: Bearer <your-jwt-token>
 - **View My Events**: `GET /api/events/organizer/my-events` (organizer only)
 - **Update Events**: `PUT /api/events/:id` (organizer or admin)
 - **Delete Events**: `DELETE /api/events/:id` (organizer or admin)
+- **Duplicate Event**: `POST /api/events/:id/duplicate` (organizer or admin)
 
 ## 🔑 Password Reset
 

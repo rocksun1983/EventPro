@@ -15,7 +15,9 @@ const eventSchema = new mongoose.Schema({
 
   date: {
     type: Date,
-    required: [true, "Event date is required"]
+    required: function () {
+      return this.status !== "draft";
+    }
   },
 
   location: {

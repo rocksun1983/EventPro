@@ -316,7 +316,7 @@ export const resendVerification = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token } = req.query;
 
     if (!token) {
       return res.status(400).json({ message: "Verification token is required" });
@@ -328,7 +328,7 @@ export const verifyEmail = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired verification token" });
+      return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:3010"}/verification failed`);
     }
 
     user.isVerified = true;
@@ -336,7 +336,16 @@ export const verifyEmail = async (req, res) => {
     user.verificationTokenExpiry = undefined;
     await user.save();
 
-    return res.json({ message: "Email verified successfully" });
+    let redirectUrl;
+    if (user.role === "admin") {
+      redirectUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/admin/dashboard`;
+    } else if (user.role === "organizer") {
+      redirectUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/organizer/dashboard`;
+    } else {
+      redirectUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/dashboard`;
+    }
+    return res.redirect(redirectUrl);
+    
   } catch (error) {
     return res.status(500).json({ message: "Error verifying email", error: error.message });
   }

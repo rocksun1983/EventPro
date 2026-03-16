@@ -15,6 +15,8 @@ import eventSaveRoutes from "./routes/eventSaveRoutes.js";
 // import vendorRoutes from "./routes/vendorRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import smsRoutes from "./routes/smsRoutes.js";
+import organizerDashboardRoutes from "./routes/organizerDashboardRoutes.js";
 
 import startReminderService from "./utils/reminderScheduler.js";
 
@@ -28,6 +30,7 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Swagger docs
 const swaggerSpec = swaggerJsdoc({
@@ -63,6 +66,8 @@ app.use("/api/events", checkinRoutes); // Check-in instruction endpoints
 // app.use("/api/vendors", vendorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/sms", smsRoutes);
+app.use("/api/organizer/dashboard", organizerDashboardRoutes);
 
 // Start reminder service
 startReminderService();

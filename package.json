@@ -27,7 +27,6 @@
     "cors": "^2.8.6",
     "csv-parse": "^5.5.0",
     "dotenv": "^17.3.1",
-    "@sendgrid/mail": "^8.1.4",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.4",

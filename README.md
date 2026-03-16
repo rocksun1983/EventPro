@@ -51,8 +51,6 @@ A comprehensive event management system built with Node.js, Express, and MongoDB
    EMAIL_SERVICE=gmail
    EMAIL_USER=your-email@gmail.com
    EMAIL_PASSWORD=your-app-password
-   SENDGRID_API_KEY=your-sendgrid-api-key
-   SENDGRID_FROM_EMAIL=verified-sender@yourdomain.com
    TWILIO_ACCOUNT_SID=your-twilio-account-sid
    TWILIO_AUTH_TOKEN=your-twilio-auth-token
    TWILIO_PHONE_NUMBER=+1234567890

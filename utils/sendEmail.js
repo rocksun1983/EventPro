@@ -3,12 +3,13 @@ import nodemailer from "nodemailer";
 const sendEmail = async (to, subject, text) => {
   const transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || "gmail",
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: process.env.EMAIL_PORT || 587,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD
     },
-    // Force IPv4 to avoid ENETUNREACH on IPv6-only SMTP resolution
-    family: 4
+    family: 4 // Use IPv4
   });
 
   await transporter.sendMail({

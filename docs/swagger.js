@@ -15,6 +15,7 @@
  *   - name: Admin
  *   - name: Dashboard
  *   - name: Organizer
+ *   - name: Reports
  * components:
  *   securitySchemes:
  *     bearerAuth:
@@ -290,6 +291,32 @@
  *                 type: string
  *               error:
  *                 type: string
+ *     Attendee:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         event:
+ *           type: string
+ *         firstName:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         email:
+ *           type: string
+ *         phone:
+ *           type: string
+ *         ticketType:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [registered, checked_in, cancelled]
+ *         source:
+ *           type: string
+ *           enum: [import, manual]
+ *         createdAt:
+ *           type: string
+ *           format: date-time
  *
  * /auth/signup:
  *   post:
@@ -1168,6 +1195,121 @@
  *             schema:
  *               type: string
  *
+ * /events/{eventId}/attendees:
+ *   get:
+ *     tags: [Attendees]
+ *     summary: List event attendees
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [registered, checked_in, cancelled]
+ *     responses:
+ *       200:
+ *         description: Attendees list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 attendees:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Attendee'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *
+ * /reports/summary:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Report summary for a single event
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Summary
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 eventName:
+ *                   type: string
+ *                 eventDate:
+ *                   type: string
+ *                   format: date-time
+ *                 organizerName:
+ *                   type: string
+ *                 totalAttendees:
+ *                   type: integer
+ *                 vipTickets:
+ *                   type: integer
+ *                 regularTickets:
+ *                   type: integer
+ *                 checkedIn:
+ *                   type: integer
+ *                 pending:
+ *                   type: integer
+ *
+ * /reports/timeline:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Report attendance timeline for a single event
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Timeline
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 labels:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 total:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                 checkedIn:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *
  * /events/{eventId}/checkin/template:
  *   get:
  *     tags: [Check-in]
@@ -1662,6 +1804,25 @@
  *                   type: integer
  *                 totalEvents:
  *                   type: integer
+ *                 totalAttendees:
+ *                   type: integer
+ *                 totalRevenue:
+ *                   type: number
+ *                 attendanceChart:
+ *                   type: object
+ *                   properties:
+ *                     labels:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     registered:
+ *                       type: array
+ *                       items:
+ *                         type: integer
+ *                     checkedIn:
+ *                       type: array
+ *                       items:
+ *                         type: integer
  *                 totalCheckins:
  *                   type: integer
  *

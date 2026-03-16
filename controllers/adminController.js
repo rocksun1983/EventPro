@@ -1,21 +1,67 @@
 import User from "../models/user.js";
 import Event from "../models/event.js";
 import AttendeeCheckin from "../models/attendeeCheckin.js";
+import Attendee from "../models/attendee.js";
 import bcrypt from "bcryptjs";
 import sendSMS from "../utils/sendSMS.js";
 
 export const dashboardStats = async (req, res) => {
 
   const users = await User.countDocuments();
-
   const events = await Event.countDocuments();
-
+  const totalAttendees = await Attendee.countDocuments();
   const checkins = await AttendeeCheckin.countDocuments();
+
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  const monthLabels = [];
+  const monthKeys = [];
+  for (let i = 0; i < 12; i += 1) {
+    const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthKeys.push(key);
+    monthLabels.push(d.toLocaleString("en-US", { month: "short" }));
+  }
+
+  const registeredByMonth = await Attendee.aggregate([
+    { $match: { createdAt: { $gte: start, $lte: now } } },
+    {
+      $group: {
+        _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const checkedInByMonth = await AttendeeCheckin.aggregate([
+    { $match: { checkedInAt: { $ne: null, $gte: start, $lte: now } } },
+    {
+      $group: {
+        _id: { year: { $year: "$checkedInAt" }, month: { $month: "$checkedInAt" } },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const toKey = (item) => `${item._id.year}-${String(item._id.month).padStart(2, "0")}`;
+  const registeredMap = new Map(registeredByMonth.map((item) => [toKey(item), item.count]));
+  const checkedInMap = new Map(checkedInByMonth.map((item) => [toKey(item), item.count]));
+
+  const registeredSeries = monthKeys.map((key) => registeredMap.get(key) || 0);
+  const checkedInSeries = monthKeys.map((key) => checkedInMap.get(key) || 0);
 
   res.json({
     totalUsers: users,
     totalEvents: events,
-    totalCheckins: checkins
+    totalAttendees,
+    totalCheckins: checkins,
+    totalRevenue: 0,
+    attendanceChart: {
+      labels: monthLabels,
+      registered: registeredSeries,
+      checkedIn: checkedInSeries
+    }
   });
 
 };

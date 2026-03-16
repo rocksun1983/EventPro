@@ -17,6 +17,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import smsRoutes from "./routes/smsRoutes.js";
 import organizerDashboardRoutes from "./routes/organizerDashboardRoutes.js";
+import reportsRoutes from "./routes/reportsRoutes.js";
 
 import startReminderService from "./utils/reminderScheduler.js";
 
@@ -72,6 +73,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/sms", smsRoutes);
 app.use("/api/organizer/dashboard", organizerDashboardRoutes);
+app.use("/api/reports", reportsRoutes);
 
 // Start reminder service
 startReminderService();

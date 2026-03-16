@@ -147,6 +147,13 @@ The server will start on `http://localhost:5000`
 | GET | `/stats` | Get organizer dashboard stats | Organizer only |
 | GET | `/stream` | Live organizer stats stream (SSE) | Organizer only |
 
+### Reports Routes (`/api/reports`)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/summary?eventId=...` | Report summary for a single event | Organizer/Admin |
+| GET | `/timeline?eventId=...` | Attendance timeline for a single event | Organizer/Admin |
+
 **SSE Auth Note:**
 - If your frontend cannot set `Authorization` headers for SSE, pass a JWT as `?token=...` to `/stream`.
 
@@ -155,6 +162,7 @@ The server will start on `http://localhost:5000`
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
 | POST | `/:eventId/attendees/imports` | Import attendees (CSV/XLSX) | Organizer/Admin |
+| GET | `/:eventId/attendees` | List event attendees | Organizer/Admin |
 | GET | `/:eventId/attendees/imports/:importId` | Get import status | Organizer/Admin |
 | GET | `/:eventId/attendees/imports/:importId/result` | Get import result | Organizer/Admin |
 | GET | `/:eventId/attendees/imports/:importId/duplicates.csv` | Download duplicate report | Organizer/Admin |

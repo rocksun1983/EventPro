@@ -10,6 +10,7 @@ import {
   exportAttendanceReport,
   exportAttendancePdf
 } from "../controllers/attendeeImportController.js";
+import { listEventAttendees } from "../controllers/attendeeController.js";
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.get("/:eventId/attendees/imports/:importId/duplicates.csv", protect, down
 router.get("/:eventId/attendees/imports/template", protect, downloadAttendeeTemplate);
 router.get("/:eventId/attendees/attendance.csv", protect, exportAttendanceReport);
 router.get("/:eventId/attendees/attendance.pdf", protect, exportAttendancePdf);
+router.get("/:eventId/attendees", protect, listEventAttendees);
 
 export default router;

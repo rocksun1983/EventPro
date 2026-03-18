@@ -793,43 +793,6 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *
- * /events/{id}/duplicate:
- *   post:
- *     tags: [Events]
- *     summary: Duplicate an event (draft, no date)
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       201:
- *         description: Event duplicated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 event:
- *                   $ref: '#/components/schemas/Event'
- *       403:
- *         description: Not authorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Event not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *   put:
  *     tags: [Events]
  *     summary: Update event
@@ -895,6 +858,43 @@
  *               properties:
  *                 message:
  *                   type: string
+ *
+ * /events/{id}/duplicate:
+ *   post:
+ *     tags: [Events]
+ *     summary: Duplicate an event (draft, no date)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Event duplicated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 event:
+ *                   $ref: '#/components/schemas/Event'
+ *       403:
+ *         description: Not authorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Event not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *
  * /events/organizer/my-events:
  *   get:

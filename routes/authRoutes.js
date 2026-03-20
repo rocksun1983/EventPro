@@ -4,6 +4,7 @@ import {
   registerOrganizer,
   registerAdmin,
   loginUser,
+  loginAdmin,
   loginWithAppwrite,
   resetPasswordAuthenticated,
   forgotPassword,
@@ -22,6 +23,7 @@ router.post("/signup/organizer", protectAdmin, registerOrganizer);
 // Open admin creation endpoint (distinct from public user signup)
 router.post("/signup/admin", registerAdmin);
 router.post("/login", loginUser);
+router.post("/login/admin", loginAdmin);
 router.post("/login/appwrite", loginWithAppwrite);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPasswordWithToken);

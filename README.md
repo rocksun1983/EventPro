@@ -87,6 +87,7 @@ The server will start on `http://localhost:5000`
 | POST | `/signup/organizer` | Create organizer account | Admin only |
 | POST | `/signup/admin` | Create admin account | No (open endpoint) |
 | POST | `/login` | User login | No |
+| POST | `/login/admin` | Admin login | No |
 | POST | `/forgot-password` | Request password reset email | No |
 | POST | `/reset-password/:token` | Reset password with token | No |
 | POST | `/reset-password` | Reset password (authenticated) | Yes |

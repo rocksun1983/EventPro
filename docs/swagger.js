@@ -535,6 +535,28 @@
  *         description: Logged in
  *         content:
  *           application/json:
+ *
+ * /auth/login/admin:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Log in as admin
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Logged in
+ *         content:
+ *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  *       400:

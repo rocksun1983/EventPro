@@ -94,6 +94,10 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    if (user.role !== "admin" && req.adminOnly) {
+      return res.status(403).json({ message: "Admin access only" });
+    }
+
     res.json({
       token: generateToken(user._id),
       user: {
@@ -111,6 +115,11 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 
+};
+
+export const loginAdmin = async (req, res) => {
+  req.adminOnly = true;
+  return loginUser(req, res);
 };
 
 

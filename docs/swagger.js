@@ -718,6 +718,46 @@
  *                 user:
  *                   $ref: '#/components/schemas/User'
  *
+ * /auth/profile/registrations:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get current user registrations
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User registrations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 registrations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       ticketId:
+ *                         type: string
+ *                       eventId:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [confirmed, pending, cancelled]
+ *                       eventName:
+ *                         type: string
+ *                       eventDate:
+ *                         type: string
+ *                         format: date-time
+ *                       eventLocation:
+ *                         type: string
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *
  * /events:
  *   get:
  *     tags: [Events]

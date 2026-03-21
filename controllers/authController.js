@@ -1,4 +1,5 @@
 import User from "../models/user.js";
+import Attendee from "../models/attendee.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import generateToken from "../utils/generateToken.js";
@@ -279,6 +280,40 @@ export const getProfile = async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Error fetching profile", error: error.message });
+  }
+};
+
+export const getMyRegistrations = async (req, res) => {
+  try {
+    const attendees = await Attendee.find({ user: req.user._id }).populate(
+      "event",
+      "title date location"
+    );
+
+    const registrations = attendees.map((attendee) => {
+      const event = attendee.event || {};
+      let status = attendee.registrationStatus;
+      if (!status) {
+        if (attendee.status === "cancelled") status = "cancelled";
+        else if (attendee.status === "registered" || attendee.status === "checked_in") status = "confirmed";
+        else status = "pending";
+      }
+
+      const eventDate = event?.date ? new Date(event.date).toISOString() : "";
+
+      return {
+        ticketId: attendee.ticketId || attendee._id.toString(),
+        eventId: event?._id?.toString() || (attendee.event?.toString?.() ?? ""),
+        status,
+        eventName: event?.title || "",
+        eventDate,
+        eventLocation: event?.location || ""
+      };
+    });
+
+    res.json({ registrations });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching registrations", error: error.message });
   }
 };
 

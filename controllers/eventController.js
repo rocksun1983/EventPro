@@ -1,5 +1,6 @@
 import Event from "../models/event.js";
 import Attendee from "../models/attendee.js"; // For event registration
+import Ticket from "../models/ticket.js";
 import User from "../models/user.js"; // For save/unsave event functionality
 
 // --------------------
@@ -233,6 +234,7 @@ export const getMyEvents = async (req, res) => {
 // Attendee Self-Registration / Event Registration
 // --------------------
 export const registerForEvent = async (req, res) => {
+  let ticketId;
   try {
     const eventId = req.params.id;
     const userId = req.user._id;
@@ -243,6 +245,14 @@ export const registerForEvent = async (req, res) => {
     const existingAttendee = await Attendee.findOne({ event: eventId, user: userId });
     if (existingAttendee) return res.status(400).json({ message: "You are already registered for this event" });
 
+    const guestName = `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim();
+    const ticket = await Ticket.create({
+      guestName,
+      guestEmail: req.user.email,
+      eventId
+    });
+    ticketId = ticket._id;
+
     const attendee = await Attendee.create({
       event: eventId,
       user: userId,
@@ -250,11 +260,16 @@ export const registerForEvent = async (req, res) => {
       lastName: req.user.lastName,
       email: req.user.email,
       phone: req.user.phone || "",
-      registeredAt: new Date()
+      registeredAt: new Date(),
+      registrationStatus: "confirmed",
+      ticketId: ticket._id.toString()
     });
 
     res.status(201).json({ message: "Successfully registered for the event", attendee });
   } catch (error) {
+    if (ticketId) {
+      await Ticket.findByIdAndDelete(ticketId).catch(() => {});
+    }
     console.error("Register for event error:", error);
     res.status(500).json({ message: "Error registering for event", error: error.message });
   }

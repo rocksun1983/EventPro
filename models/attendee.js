@@ -7,6 +7,10 @@ const attendeeSchema = new mongoose.Schema({
     ref: "Event",
     required: true
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
 
   firstName: {
     type: String,
@@ -37,6 +41,15 @@ const attendeeSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  ticketId: {
+    type: String,
+    trim: true
+  },
+  registrationStatus: {
+    type: String,
+    enum: ["confirmed", "pending", "cancelled"],
+    default: "pending"
+  },
 
   status: {
     type: String,
@@ -60,5 +73,6 @@ const attendeeSchema = new mongoose.Schema({
 });
 
 attendeeSchema.index({ event: 1, email: 1 }, { unique: true });
+attendeeSchema.index({ ticketId: 1 }, { unique: true, sparse: true });
 
 export default mongoose.model("Attendee", attendeeSchema);

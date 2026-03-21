@@ -10,7 +10,8 @@ import {
   forgotPassword,
   resetPasswordWithToken,
   updateProfile,
-  getProfile
+  getProfile,
+  getMyRegistrations
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { protectAdmin } from "../middleware/adminMiddleware.js";
@@ -29,6 +30,7 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPasswordWithToken);
 router.post("/reset-password", protect, resetPasswordAuthenticated);
 router.get("/profile", protect, getProfile);
+router.get("/profile/registrations", protect, getMyRegistrations);
 router.put("/profile", protect, updateProfile);
 
 export default router;

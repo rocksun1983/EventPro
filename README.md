@@ -92,6 +92,7 @@ The server will start on `http://localhost:5000`
 | POST | `/reset-password/:token` | Reset password with token | No |
 | POST | `/reset-password` | Reset password (authenticated) | Yes |
 | GET | `/profile` | Get user profile | Yes |
+| GET | `/profile/registrations` | Get user registrations | Yes |
 | PUT | `/profile` | Update user profile | Yes |
 
 ### Event Routes (`/api/events`)

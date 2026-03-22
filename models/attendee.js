@@ -45,6 +45,8 @@ const attendeeSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  verificationCodeHash: String,
+  verificationCodeExpiry: Date,
   registrationStatus: {
     type: String,
     enum: ["confirmed", "pending", "cancelled"],

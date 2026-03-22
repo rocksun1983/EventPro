@@ -37,6 +37,8 @@ const userSchema = new mongoose.Schema({
   verificationTokenExpiry: Date,
   resetToken: String,
   resetTokenExpiry: Date,
+  resetOtpHash: String,
+  resetOtpExpiry: Date,
   smsEnabled: {
     type: Boolean,
     default: false

@@ -7,9 +7,11 @@ import {
   updateEvent,
   deleteEvent,
   getMyEvents,
-  registerForEvent
+  registerForEvent,
+  verifyEventRegistration
 } from "../controllers/eventController.js";
 import { protect } from "../middleware/authMiddleware.js";
+import { otpRateLimiter } from "../middleware/otpRateLimiter.js";
 import { saveEvent, unsaveEvent } from "../controllers/eventSaveController.js"; // Add your save/unsave controller imports
 
 const router = express.Router();
@@ -30,6 +32,7 @@ router.delete("/:id", protect, deleteEvent);
 
 // Register current user for an event
 router.post("/:id/register", protect, registerForEvent);
+router.post("/:eventId/verify", protect, otpRateLimiter(), verifyEventRegistration);
 
 // Save / Unsave routes
 router.post("/:id/save", protect, saveEvent);     // Save an event

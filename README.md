@@ -89,6 +89,8 @@ The server will start on `http://localhost:5000`
 | POST | `/login` | User login | No |
 | POST | `/login/admin` | Admin login | No |
 | POST | `/forgot-password` | Request password reset email | No |
+| POST | `/verify-otp` | Verify password reset OTP | No |
+| POST | `/resend-otp` | Resend password reset OTP | No |
 | POST | `/reset-password/:token` | Reset password with token | No |
 | POST | `/reset-password` | Reset password (authenticated) | Yes |
 | GET | `/profile` | Get user profile | Yes |
@@ -163,6 +165,8 @@ The server will start on `http://localhost:5000`
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
+| POST | `/:id/register` | Register current user for an event | Yes |
+| POST | `/:eventId/verify` | Verify event registration OTP | Yes |
 | POST | `/:eventId/attendees/imports` | Import attendees (CSV/XLSX) | Organizer/Admin |
 | GET | `/:eventId/attendees` | List event attendees | Organizer/Admin |
 | GET | `/:eventId/attendees/imports/:importId` | Get import status | Organizer/Admin |

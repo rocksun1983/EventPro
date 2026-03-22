@@ -2,6 +2,11 @@ import Event from "../models/event.js";
 import Attendee from "../models/attendee.js"; // For event registration
 import Ticket from "../models/ticket.js";
 import User from "../models/user.js"; // For save/unsave event functionality
+import sendSMS from "../utils/sendSMS.js";
+import crypto from "crypto";
+
+const generateOtp = () => crypto.randomInt(100000, 1000000).toString();
+const hashOtp = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
 
 // --------------------
 // Event CRUD
@@ -238,12 +243,17 @@ export const registerForEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
     const userId = req.user._id;
+    const phone = (req.body?.phone || req.user.phone || "").trim();
 
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: "Event not found" });
 
     const existingAttendee = await Attendee.findOne({ event: eventId, user: userId });
     if (existingAttendee) return res.status(400).json({ message: "You are already registered for this event" });
+
+    if (!phone) {
+      return res.status(400).json({ message: "Phone number is required for verification" });
+    }
 
     const guestName = `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim();
     const ticket = await Ticket.create({
@@ -253,17 +263,31 @@ export const registerForEvent = async (req, res) => {
     });
     ticketId = ticket._id;
 
+    const otp = generateOtp();
+    const otpHash = hashOtp(otp);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
     const attendee = await Attendee.create({
       event: eventId,
       user: userId,
       firstName: req.user.firstName,
       lastName: req.user.lastName,
       email: req.user.email,
-      phone: req.user.phone || "",
+      phone,
       registeredAt: new Date(),
-      registrationStatus: "confirmed",
-      ticketId: ticket._id.toString()
+      registrationStatus: "pending",
+      ticketId: ticket._id.toString(),
+      verificationCodeHash: otpHash,
+      verificationCodeExpiry: otpExpiry
     });
+
+    const smsResult = await sendSMS(
+      phone,
+      `Your EventPro verification code is: ${otp}. Valid for 10 minutes.`
+    );
+    if (!smsResult.success) {
+      console.error("Registration SMS failed:", smsResult.error || smsResult.message);
+    }
 
     res.status(201).json({ message: "Successfully registered for the event", attendee });
   } catch (error) {
@@ -272,6 +296,61 @@ export const registerForEvent = async (req, res) => {
     }
     console.error("Register for event error:", error);
     res.status(500).json({ message: "Error registering for event", error: error.message });
+  }
+};
+
+export const verifyEventRegistration = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { phone, code } = req.body || {};
+
+    if (!phone || !code) {
+      return res.status(400).json({ message: "Phone and code are required" });
+    }
+
+    const normalizedPhone = phone.trim();
+
+    const attendee = await Attendee.findOne({ event: eventId, user: req.user._id }).populate(
+      "event",
+      "title"
+    );
+
+    if (!attendee) {
+      return res.status(404).json({ message: "Registration not found" });
+    }
+
+    if (attendee.phone && attendee.phone.trim() !== normalizedPhone) {
+      return res.status(400).json({ message: "Phone number does not match registration" });
+    }
+
+    if (!attendee.verificationCodeHash || !attendee.verificationCodeExpiry) {
+      return res.status(400).json({ message: "Verification code not found" });
+    }
+
+    if (attendee.verificationCodeExpiry.getTime() < Date.now()) {
+      return res.status(400).json({ message: "Verification code expired" });
+    }
+
+    const hashed = hashOtp(code);
+    if (hashed !== attendee.verificationCodeHash) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    attendee.registrationStatus = "confirmed";
+    attendee.verificationCodeHash = undefined;
+    attendee.verificationCodeExpiry = undefined;
+    await attendee.save();
+
+    return res.json({
+      message: "Registration verified successfully",
+      attendee: {
+        ticketId: attendee.ticketId || attendee._id.toString(),
+        status: "confirmed",
+        eventName: attendee.event?.title || ""
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error verifying registration", error: error.message });
   }
 };
 

@@ -4,10 +4,13 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
+import sendSMS from "../utils/sendSMS.js";
 import { Client, Account } from "appwrite";
 
 // Verification flow removed; token helper kept for reset tokens.
 const generateVerificationToken = () => crypto.randomBytes(32).toString("hex");
+const generateOtp = () => crypto.randomInt(100000, 1000000).toString();
+const hashOtp = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
 
 const registerWithRole = async (req, res, role) => {
   try {
@@ -197,6 +200,24 @@ export const forgotPassword = async (req, res) => {
       `
     );
 
+    if (user.phone) {
+      const otp = generateOtp();
+      const otpHash = hashOtp(otp);
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+      user.resetOtpHash = otpHash;
+      user.resetOtpExpiry = otpExpiry;
+      await user.save();
+
+      const smsResult = await sendSMS(
+        user.phone,
+        `Your EventPro password reset code is: ${otp}. Valid for 10 minutes.`
+      );
+      if (!smsResult.success) {
+        console.error("Password reset SMS failed:", smsResult.error || smsResult.message);
+      }
+    }
+
     res.json({ message: "Password reset email sent" });
   } catch (error) {
     console.error("Forgot password error:", error);
@@ -239,6 +260,83 @@ export const resetPasswordWithToken = async (req, res) => {
   } catch (error) {
     console.error("Reset password error:", error);
     res.status(500).json({ message: "Error resetting password", error: error.message });
+  }
+};
+
+export const verifyPasswordOtp = async (req, res) => {
+  try {
+    const { otp, phone } = req.body || {};
+
+    if (!otp || !phone) {
+      return res.status(400).json({ message: "OTP and phone are required" });
+    }
+
+    const normalizedPhone = phone.trim();
+    const user = await User.findOne({ phone: normalizedPhone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.resetOtpHash || !user.resetOtpExpiry) {
+      return res.status(400).json({ message: "OTP not found" });
+    }
+
+    if (user.resetOtpExpiry.getTime() < Date.now()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    const otpHash = hashOtp(otp);
+    if (otpHash !== user.resetOtpHash) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    user.resetOtpHash = undefined;
+    user.resetOtpExpiry = undefined;
+    await user.save();
+
+    return res.json({ token: resetToken, message: "OTP verified successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error verifying OTP", error: error.message });
+  }
+};
+
+export const resendPasswordOtp = async (req, res) => {
+  try {
+    const { phone } = req.body || {};
+    if (!phone) {
+      return res.status(400).json({ message: "Phone is required" });
+    }
+
+    const normalizedPhone = phone.trim();
+    const user = await User.findOne({ phone: normalizedPhone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const otp = generateOtp();
+    const otpHash = hashOtp(otp);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    user.resetOtpHash = otpHash;
+    user.resetOtpExpiry = otpExpiry;
+    await user.save();
+
+    const smsResult = await sendSMS(
+      user.phone,
+      `Your EventPro password reset code is: ${otp}. Valid for 10 minutes.`
+    );
+    if (!smsResult.success) {
+      console.error("Password reset SMS failed:", smsResult.error || smsResult.message);
+    }
+
+    return res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error resending OTP", error: error.message });
   }
 };
 

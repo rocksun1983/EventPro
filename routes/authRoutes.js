@@ -9,12 +9,15 @@ import {
   resetPasswordAuthenticated,
   forgotPassword,
   resetPasswordWithToken,
+  verifyPasswordOtp,
+  resendPasswordOtp,
   updateProfile,
   getProfile,
   getMyRegistrations
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { protectAdmin } from "../middleware/adminMiddleware.js";
+import { otpRateLimiter } from "../middleware/otpRateLimiter.js";
 
 const router = express.Router();
 
@@ -27,6 +30,8 @@ router.post("/login", loginUser);
 router.post("/login/admin", loginAdmin);
 router.post("/login/appwrite", loginWithAppwrite);
 router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", otpRateLimiter(), verifyPasswordOtp);
+router.post("/resend-otp", otpRateLimiter(), resendPasswordOtp);
 router.post("/reset-password/:token", resetPasswordWithToken);
 router.post("/reset-password", protect, resetPasswordAuthenticated);
 router.get("/profile", protect, getProfile);
